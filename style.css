@@ -1,0 +1,86 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; background: #0c0c10; font-family: 'Segoe UI', system-ui, sans-serif; }
+canvas#game { display: block; }
+
+/* ---------- HUD ---------- */
+#hud {
+  position: fixed; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; gap: 18px;
+  padding: 8px 16px;
+  background: linear-gradient(to bottom, rgba(5,5,10,0.92), rgba(5,5,10,0.75));
+  color: #ddd; font-size: 14px; user-select: none; z-index: 5;
+  border-bottom: 1px solid #26262e;
+}
+#hud .cash { color: #4ade80; font-weight: bold; font-size: 16px; }
+#hud-wanted { color: #fbbf24; letter-spacing: 2px; }
+#hud-wanted.warn { color: #fb923c; }
+#hud-wanted.danger { color: #ff3b3b; animation: blink 0.8s infinite; }
+@keyframes blink { 50% { opacity: 0.4; } }
+.heatwrap { width: 90px; height: 8px; background: #222; border-radius: 4px; overflow: hidden; display: inline-block; }
+#hud-heat { display: block; height: 100%; width: 0; background: linear-gradient(to right, #fbbf24, #ef4444); transition: width 0.3s; }
+.district { color: #c084fc; font-weight: 600; }
+.hint { margin-left: auto; color: #666; font-size: 12px; }
+
+#event-banner {
+  display: none; position: fixed; top: 42px; left: 50%; transform: translateX(-50%);
+  background: rgba(120, 20, 30, 0.92); color: #ffd86b; font-weight: 600;
+  padding: 7px 22px; border-radius: 0 0 10px 10px; z-index: 5; font-size: 14px;
+  border: 1px solid #a33; border-top: none;
+}
+#mission-hud {
+  display: none; position: fixed; top: 48px; left: 14px;
+  background: rgba(20,20,30,0.85); color: #ffd86b; padding: 7px 12px;
+  border-radius: 8px; font-size: 13px; z-index: 5; border: 1px solid #443;
+}
+
+#toasts { position: fixed; bottom: 130px; left: 14px; z-index: 6; pointer-events: none; }
+.toast {
+  background: rgba(10,10,18,0.88); color: #eee; padding: 7px 14px; margin-top: 6px;
+  border-left: 3px solid #ffd86b; border-radius: 4px; font-size: 13.5px; max-width: 460px;
+}
+
+#log {
+  position: fixed; bottom: 8px; left: 14px; width: 380px; height: 108px; overflow-y: auto;
+  background: rgba(8,8,14,0.6); color: #888; font-size: 11.5px; padding: 6px 10px;
+  border-radius: 6px; z-index: 4; line-height: 1.5;
+}
+#log::-webkit-scrollbar { width: 5px; } #log::-webkit-scrollbar-thumb { background: #333; }
+
+/* ---------- Panels ---------- */
+#panel {
+  display: none; position: fixed; top: 56px; left: 50%; transform: translateX(-50%);
+  width: min(760px, 94vw); max-height: calc(100vh - 90px); overflow-y: auto;
+  background: rgba(14,14,22,0.97); color: #ddd; z-index: 10;
+  border: 1px solid #3a3a4a; border-radius: 12px; padding: 20px 24px;
+  box-shadow: 0 10px 50px rgba(0,0,0,0.7); font-size: 14px;
+}
+#panel::-webkit-scrollbar { width: 7px; } #panel::-webkit-scrollbar-thumb { background: #3a3a4a; border-radius: 3px; }
+.panel-close { float: right; cursor: pointer; color: #999; font-size: 13px; padding: 2px 8px; }
+.panel-close:hover { color: #fff; }
+#panel h2 { color: #ffd86b; margin-bottom: 8px; font-size: 20px; }
+#panel h3 { color: #c084fc; margin: 16px 0 6px; font-size: 15px; }
+#panel table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+#panel th { text-align: left; color: #888; font-size: 12px; text-transform: uppercase; padding: 4px 8px; border-bottom: 1px solid #2a2a36; }
+#panel td { padding: 7px 8px; border-bottom: 1px solid #1d1d28; vertical-align: middle; }
+#panel tr.locked td { color: #666; }
+#panel td.best { color: #4ade80; font-weight: bold; }
+#panel ul { list-style: none; margin: 8px 0; }
+#panel li { padding: 4px 0; }
+.small { color: #999; font-size: 12.5px; line-height: 1.5; }
+.note {
+  background: rgba(255,216,107,0.08); border: 1px solid #5a4a20;
+  padding: 10px 14px; border-radius: 8px; margin: 10px 0; color: #ffd86b;
+}
+.offer { background: #181822; border: 1px solid #2a2a3a; padding: 10px 14px; border-radius: 8px; margin: 8px 0; }
+.footer { margin-top: 14px; border-top: 1px solid #2a2a36; padding-top: 10px; }
+
+#panel button, .tab {
+  background: #2b2b3d; color: #eee; border: 1px solid #44445c; border-radius: 6px;
+  padding: 5px 12px; margin: 2px; cursor: pointer; font-size: 13px;
+}
+#panel button:hover { background: #3a3a52; }
+#panel button:disabled { opacity: 0.4; cursor: default; }
+.tabs { margin-bottom: 10px; }
+.tab.on { background: #ffd86b; color: #1a1a22; font-weight: bold; border-color: #ffd86b; }
+.danger-btn { background: #4a1d1d !important; border-color: #6a2a2a !important; }
+.danger-btn:hover { background: #5e2424 !important; }
