@@ -204,6 +204,9 @@ Game.prototype.panelHideout = function () {
 // ---------- missions ----------
 Game.prototype.panelMissions = function () {
   let body = '';
+  const cd = Math.ceil(this.oddJobT || 0);
+  body += `<div class="note">💰 ALWAYS AVAILABLE — Street work: run errands for the locals. Pays $60, zero risk.
+    <button onclick="game.doOddJob()" ${cd ? 'disabled' : ''}>${cd ? `Tired (${cd}s)` : '🧹 WORK NOW (+$60)'}</button></div>`;
   if (this.missions.active) {
     const m = this.missions.active;
     body += `<div class="note">📋 ACTIVE: ${m.desc}<br>Remaining: ${m.remaining} • Bonus ${fmt$(m.bonus)} + ${m.repBonus} rep
@@ -215,11 +218,7 @@ Game.prototype.panelMissions = function () {
     body += `<div class="offer">📦 ${m.desc}<div class="small">Bonus: ${fmt$(m.bonus)} + ${m.repBonus} rep (paid on top of the sale price)</div>
       <button onclick="game.acceptMission(${i})" ${this.missions.active ? 'disabled' : ''}>Accept</button></div>`;
   });
-  body += `<button onclick="game.refreshMissionOffers();game.renderPanel()">🔄 New offers</button>`;
-  const cd = Math.ceil(this.oddJobT || 0);
-  body += `<h3>Street work</h3>
-    <div class="offer">🧹 Run errands for the locals — always available, pays $60, zero risk.
-      <button onclick="game.doOddJob()" ${cd ? 'disabled' : ''}>${cd ? `Tired (${cd}s)` : 'Work'}</button></div>
+  body += `<button onclick="game.refreshMissionOffers();game.renderPanel()">🔄 New offers</button>
     <h3>Other work</h3><div class="small">🗝️ Warehouse heists: buy a Lockpick Set, then break into the Bonded Warehouses (📦) in Warehouse Row. Big loot, big heat.</div>`;
   return `<h2>📋 Missions</h2>${body}`;
 };

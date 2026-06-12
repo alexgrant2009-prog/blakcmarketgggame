@@ -60,6 +60,7 @@ for (let i = 0; i < 8000; i++) g.update(0.033);
 console.log('After ~4.4 min more: day=', g.player.day, 'cash=', Math.floor(g.player.cash), 'stash=', JSON.stringify(g.player.stash));
 
 // force a death (caught by a cop)
+g.bustInfo = null; // sight-based cops may have already caught us during the simulated minutes
 g.player.heat = 80; g.buyItem('counterfeit', 1, dealer);
 g.bust('test death');
 console.log('Death: overlay=', !!g.bustInfo, 'inv=', JSON.stringify(g.player.inv), 'busts=', g.player.stats.busts, 'heat=', g.player.heat);

@@ -517,6 +517,15 @@ class Game {
 
     this.oddJobT = Math.max(0, (this.oddJobT || 0) - dt);
 
+    // nudge broke players toward street work
+    if (this.player.cash < 50 && this.carried() === 0 && this.stashed() === 0) {
+      this.lowCashHintT = (this.lowCashHintT || 0) - dt;
+      if (this.lowCashHintT <= 0) {
+        this.lowCashHintT = 40;
+        this.toast('💸 Broke? Press M — street work pays $60, zero risk.');
+      }
+    }
+
     // autosave
     this.saveT -= dt;
     if (this.saveT <= 0) { this.saveT = 10; this.save(); }
