@@ -67,6 +67,16 @@ class Police {
     return true;
   }
 
+  // True if no building tile sits on the straight line between two points
+  hasLineOfSight(x0, y0, x1, y1) {
+    const steps = Math.ceil(Math.hypot(x1 - x0, y1 - y0) / (TILE * 0.4));
+    for (let i = 1; i < steps; i++) {
+      const x = x0 + (x1 - x0) * i / steps, y = y0 + (y1 - y0) * i / steps;
+      if (this.map.at(Math.floor(x / TILE), Math.floor(y / TILE)) === T_BLOCK) return false;
+    }
+    return true;
+  }
+
   nearestCopWalkable(tx, ty) {
     for (let r = 0; r < 15; r++) {
       for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
@@ -150,18 +160,24 @@ class Police {
       const dx = p.x - cop.x, dy = p.y - cop.y;
       const dist = Math.hypot(dx, dy);
 
-      // detection: wanted 4+ = hunted on sight; carrying contraband near a
-      // cop gets you chased even at low (or zero) wanted if you brush past
-      const sees = dist < vision * (cop.undercover ? 1.25 : 1) && !game.inSewerSafe;
+      // detection is by SIGHT: buildings block the view. A cop who sees you
+      // carrying contraband — or sees you with any wanted star — gives chase.
       const carrying = game.carriedRisk() > 0;
-      if (sees && (wanted >= 4 ||
-        (carrying && wanted >= 1 && dist < vision * 0.6) ||
-        (carrying && dist < TILE * 2.2))) {
-        if (!cop.chasing) { cop.chasing = true; if (game.hasWorker('scout') || dist < vision) game.toast('🚨 A cop is chasing you! (Q = smoke bomb)'); }
+      const losClear = this.hasLineOfSight(cop.x, cop.y, p.x, p.y);
+      const inSight = dist < vision * (cop.undercover ? 1.25 : 1) && losClear && !game.inSewerSafe;
+      if (inSight && (carrying || wanted >= 1)) {
+        if (!cop.chasing) { cop.chasing = true; game.toast('🚨 A cop spotted you and is chasing! (Q = smoke bomb, or break his line of sight)'); }
+        cop.lostT = 0;
       }
-      // a chase only ends when the cop actually loses you (distance, sewers,
-      // smoke, death or disguise) — dropping to 0 stars doesn't call them off
-      if (cop.chasing && (dist > vision * 3.2 || game.inSewerSafe)) cop.chasing = false;
+      // losing the chase: stay out of his sight for 2.5s, get far away,
+      // or vanish into the sewers
+      if (cop.chasing) {
+        if (dist < vision * 2.5 && losClear && !game.inSewerSafe) cop.lostT = 0;
+        else {
+          cop.lostT = (cop.lostT || 0) + dt;
+          if (cop.lostT > 2.5 || dist > vision * 3.2 || game.inSewerSafe) cop.chasing = false;
+        }
+      }
 
       // movement: follow a BFS path so cops never get pinned on buildings
       const ctx = Math.floor(cop.x / TILE), cty = Math.floor(cop.y / TILE);
