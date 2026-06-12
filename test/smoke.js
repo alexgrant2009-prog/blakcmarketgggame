@@ -59,12 +59,15 @@ console.log('Upgrades=', JSON.stringify(g.player.upgrades), 'workers=', g.player
 for (let i = 0; i < 8000; i++) g.update(0.033);
 console.log('After ~4.4 min more: day=', g.player.day, 'cash=', Math.floor(g.player.cash), 'stash=', JSON.stringify(g.player.stash));
 
-// force a bust
+// force a death (caught by a cop)
 g.player.heat = 80; g.buyItem('counterfeit', 1, dealer);
-g.bust('test bust');
-console.log('Bust: jail=', g.player.jail.toFixed(1), 'inv=', JSON.stringify(g.player.inv), 'busts=', g.player.stats.busts);
+g.bust('test death');
+console.log('Death: overlay=', !!g.bustInfo, 'inv=', JSON.stringify(g.player.inv), 'busts=', g.player.stats.busts, 'heat=', g.player.heat);
+if (Object.keys(g.player.inv).length) { console.log('FAIL: carried items survived death'); process.exit(1); }
+g.bustInfo = null; g.respawn();
+const hh = g.map.pois.find(p => p.kind === 'hideout');
+console.log('Respawn near hideout:', Math.hypot(g.player.x/26 - hh.tx, g.player.y/26 - hh.ty) < 6 ? 'OK' : 'FAIL');
 for (let i = 0; i < 2000; i++) g.update(0.033);
-console.log('Post-jail: jail=', g.player.jail, 'heat=', g.player.heat.toFixed(1));
 
 // missions
 g.refreshMissionOffers();

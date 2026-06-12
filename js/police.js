@@ -202,8 +202,8 @@ class Police {
       if (game.hasWorker('scout') && dist < vision * 1.6 && !cop.warned) { cop.warned = true; }
       else if (dist > vision * 2) cop.warned = false;
 
-      // bust
-      if (cop.chasing && dist < TILE * 0.85) game.bust('A patrol officer grabbed you!');
+      // the grab: bigger cops, bigger reach
+      if (cop.chasing && dist < TILE * 1.3) game.bust('A cop caught you. In this city, getting caught means death.');
     }
 
     // checkpoints appear at wanted >= 3

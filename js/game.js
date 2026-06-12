@@ -82,7 +82,7 @@ class Game {
   repTier() { let t = REP_TIERS[0]; for (const r of REP_TIERS) if (this.player.rep >= r.rep) t = r; return t; }
   isNight() { return this.player.dayT / DAY_LENGTH > 0.55; }
   policeVision() {
-    let v = 5.5 - (this.player.gear.disguise ? 1.4 : 0) - (this.isNight() ? 0.8 : 0);
+    let v = 6 - (this.player.gear.disguise ? 1.4 : 0) - (this.isNight() ? 0.8 : 0);
     v *= 1 + this.vehicle().susp;
     return Math.max(2.6, v);
   }
@@ -114,7 +114,7 @@ class Game {
       this.keys[k] = true;
       if (k === 'escape') { this.closePanel(); }
       if (this.player.jail > 0) return;
-      if (this.bustInfo) { if (k === 'enter' || k === ' ') this.bustInfo = null; return; }
+      if (this.bustInfo) { if (k === 'enter' || k === ' ') { this.bustInfo = null; this.respawn(); } return; }
       if (k === 'e') this.interact();
       if (k === 'q') this.useSmoke();
       if (k === 'm') this.togglePanel('missions');
@@ -249,9 +249,11 @@ class Game {
     this.closePanel();
   }
 
-  // ---------- busts, jail, raids ----------
+  // ---------- death & raids ----------
+  // Getting caught is death: you lose everything you carry, take a cash hit,
+  // and wake up back at the hideout. The stash survives you.
   bust(reason) {
-    if (this.player.jail > 0 || this.bustInfo) return;
+    if (this.bustInfo) return;
     const w = this.wanted();
     const lostItems = [];
     for (const id in this.player.inv) lostItems.push(`${this.player.inv[id]} × ${ITEMS[id].name}`);
@@ -260,14 +262,21 @@ class Game {
     this.player.inv = {};
     this.player.cash -= fine;
     this.addRep(-repLoss);
-    this.player.jail = 6 + w * 4;
     this.player.heat = 0;
     this.player.stats.busts++;
     for (const c of this.police.cops) c.chasing = false;
     this.police.checkpoints = [];
-    this.bustInfo = { reason, fine, repLoss, lostItems, served: false };
+    this.bustInfo = { reason, fine, repLoss, lostItems };
     this.closePanel();
     if (this.missions.active) { this.toast('❌ Your mission contract was voided.'); this.missions.active = null; }
+  }
+
+  respawn() {
+    const h = this.map.pois.find(p => p.kind === 'hideout');
+    const s = this.findWalkableNear(h.tx, h.ty + 1);
+    this.player.x = s.x; this.player.y = s.y;
+    this.player.heat = 0;
+    this.toast('You wake up at your hideout, pockets empty. The stash is untouched — back to work.');
   }
 
   checkpointScan() {

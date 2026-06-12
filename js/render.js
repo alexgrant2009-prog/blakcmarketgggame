@@ -88,14 +88,18 @@ Game.prototype.render = function () {
     ctx.fillText('🛑', cp.x, cp.y + TILE * 0.35);
   }
 
-  // cops
+  // cops — drawn big so they visibly own the streets, with their grab radius
   for (const cop of this.police.cops) {
-    ctx.font = `${TILE * 0.95}px serif`;
-    ctx.fillText(cop.stun > 0 ? '😵' : cop.undercover ? '🕵️' : '👮', cop.x, cop.y + TILE * 0.3);
+    if (cop.chasing) {
+      ctx.fillStyle = 'rgba(255,40,40,0.15)';
+      ctx.beginPath(); ctx.arc(cop.x, cop.y, TILE * 1.3, 0, 7); ctx.fill();
+    }
+    ctx.font = `${TILE * 1.6}px serif`;
+    ctx.fillText(cop.stun > 0 ? '😵' : cop.undercover ? '🕵️' : '👮', cop.x, cop.y + TILE * 0.5);
     if (cop.chasing) {
       ctx.fillStyle = '#ff4040';
-      ctx.font = 'bold 12px sans-serif';
-      ctx.fillText('!', cop.x, cop.y - TILE * 0.6);
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillText('!', cop.x, cop.y - TILE * 1.1);
     }
   }
 
@@ -152,20 +156,21 @@ Game.prototype.render = function () {
     ctx.fillText(`Release in ${Math.ceil(p.jail)}s`, cw / 2, ch / 2 + 12);
   }
 
-  // bust overlay
+  // death overlay
   if (this.bustInfo) {
     const b = this.bustInfo;
-    ctx.fillStyle = 'rgba(20,0,0,0.85)';
+    ctx.fillStyle = 'rgba(20,0,0,0.88)';
     ctx.fillRect(0, 0, cw, ch);
-    ctx.textAlign = 'center'; ctx.fillStyle = '#ff5b5b';
-    ctx.font = 'bold 44px sans-serif';
-    ctx.fillText('BUSTED!', cw / 2, ch / 2 - 90);
+    ctx.textAlign = 'center'; ctx.fillStyle = '#ff3b3b';
+    ctx.font = 'bold 54px sans-serif';
+    ctx.fillText('☠️ YOU DIED', cw / 2, ch / 2 - 100);
     ctx.fillStyle = '#eee'; ctx.font = '18px sans-serif';
     const lines = [b.reason, '',
-      b.lostItems.length ? 'Confiscated: ' + b.lostItems.join(', ') : 'They found nothing on you.',
-      `Fine paid: $${b.fine}   •   Reputation: -${b.repLoss}`,
-      '', 'Press ENTER to do your time.'];
-    lines.forEach((l, i) => ctx.fillText(l, cw / 2, ch / 2 - 40 + i * 28));
+      b.lostItems.length ? 'Everything you carried is gone: ' + b.lostItems.join(', ') : 'At least your pockets were already empty.',
+      `The street took $${b.fine}   •   Reputation: -${b.repLoss}`,
+      'Your stash at the hideout is safe.',
+      '', 'Press ENTER to wake up at your hideout.'];
+    lines.forEach((l, i) => ctx.fillText(l, cw / 2, ch / 2 - 45 + i * 28));
   }
 };
 
