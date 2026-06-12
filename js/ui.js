@@ -273,7 +273,7 @@ Game.prototype.panelHelp = function () {
   </table>
   <h3>Wanted level ★</h3>
   <div class="small">Crimes build heat. ★ police notice you • ★★ extra patrols • ★★★ checkpoints • ★★★★ manhunt — the force converges on you • ★★★★★ city lockdown + hideout raid.
-  ☠️ If a cop catches you, YOU DIE: everything you carry is lost, plus cash and reputation. You respawn at your hideout — only the stash survives. Heat fades with time, or hire a hacker.</div>
+  ☠️ NEVER TOUCH A COP. Bump one while carrying contraband (or at ★★+) and you DIE on the spot: everything you carry is lost, plus cash and reputation. You respawn at your hideout — only the stash survives. Bump one while clean and you get shoved off with a warning — and your heat rises. Carrying goods close to an officer triggers a chase even at zero stars. Heat fades with time, or hire a hacker.</div>
   <h3>Reputation</h3>
   <div class="small">${REP_TIERS.map(t => `<b>${t.rep}</b> ${t.title} — ${t.perk}`).join('<br>')}</div>
   <button onclick="game.closePanel()">Hit the streets →</button>`;

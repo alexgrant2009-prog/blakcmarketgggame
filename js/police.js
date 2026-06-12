@@ -124,13 +124,23 @@ class Police {
     const p = game.player;
     const wanted = game.wanted();
     const lockdown = game.economy.eventIs('lockdown');
+    this.shoveCool = Math.max(0, (this.shoveCool || 0) - dt);
 
     // population control
     const target = this.targetCopCount(wanted, lockdown);
     while (this.cops.length < target) this.spawnCop(this.cops.length % 2 === 0);
-    if (this.cops.length > target) {
-      // calm cops walk off duty
-      const idx = this.cops.findIndex(c => !c.chasing);
+    this.despawnT = Math.max(0, (this.despawnT || 0) - dt);
+    if (this.cops.length > target && this.despawnT === 0) {
+      // one cop per second clocks off — always the idle one farthest from
+      // the player, so an officer next to you never just vanishes
+      this.despawnT = 1;
+      let idx = -1, bd = -1;
+      for (let i = 0; i < this.cops.length; i++) {
+        const c = this.cops[i];
+        if (c.chasing) continue;
+        const d = Math.hypot(c.x - p.x, c.y - p.y);
+        if (d > bd) { bd = d; idx = i; }
+      }
       if (idx >= 0) this.cops.splice(idx, 1);
     }
 
@@ -140,12 +150,18 @@ class Police {
       const dx = p.x - cop.x, dy = p.y - cop.y;
       const dist = Math.hypot(dx, dy);
 
-      // detection: wanted 4+ means cops actively hunt on sight
+      // detection: wanted 4+ = hunted on sight; carrying contraband near a
+      // cop gets you chased even at low (or zero) wanted if you brush past
       const sees = dist < vision * (cop.undercover ? 1.25 : 1) && !game.inSewerSafe;
-      if (sees && (wanted >= 4 || (wanted >= 1 && dist < vision * 0.5 && game.carriedRisk() > 0 && wanted >= 2))) {
+      const carrying = game.carriedRisk() > 0;
+      if (sees && (wanted >= 4 ||
+        (carrying && wanted >= 1 && dist < vision * 0.6) ||
+        (carrying && dist < TILE * 2.2))) {
         if (!cop.chasing) { cop.chasing = true; if (game.hasWorker('scout') || dist < vision) game.toast('🚨 A cop is chasing you! (Q = smoke bomb)'); }
       }
-      if (cop.chasing && (wanted === 0 || dist > vision * 3.2 || game.inSewerSafe)) cop.chasing = false;
+      // a chase only ends when the cop actually loses you (distance, sewers,
+      // smoke, death or disguise) — dropping to 0 stars doesn't call them off
+      if (cop.chasing && (dist > vision * 3.2 || game.inSewerSafe)) cop.chasing = false;
 
       // movement: follow a BFS path so cops never get pinned on buildings
       const ctx = Math.floor(cop.x / TILE), cty = Math.floor(cop.y / TILE);
@@ -202,8 +218,24 @@ class Police {
       if (game.hasWorker('scout') && dist < vision * 1.6 && !cop.warned) { cop.warned = true; }
       else if (dist > vision * 2) cop.warned = false;
 
-      // the grab: bigger cops, bigger reach
-      if (cop.chasing && dist < TILE * 1.3) game.bust('A cop caught you. In this city, getting caught means death.');
+      // contact with an officer ALWAYS has consequences
+      if (cop.chasing && dist < TILE * 1.3) {
+        game.bust('A cop caught you. In this city, getting caught means death.');
+      } else if (dist < TILE * 1.1) {
+        if (carrying || wanted >= 2) {
+          game.bust('You walked straight into an officer while dirty. Instant death.');
+        } else if (this.shoveCool <= 0) {
+          // clean and low heat: you get shoved off and warned, heat rises
+          this.shoveCool = 1.2;
+          const n = dist || 1;
+          game.player.x = cop.x + (dx / n) * TILE * 1.8;
+          game.player.y = cop.y + (dy / n) * TILE * 1.8;
+          const s = game.findWalkableNear(Math.floor(game.player.x / TILE), Math.floor(game.player.y / TILE));
+          game.player.x = s.x; game.player.y = s.y;
+          game.addHeat(5);
+          game.toast('👮 "Watch it!" The officer shoves you back. Keep pushing your luck and see what happens.');
+        }
+      }
     }
 
     // checkpoints appear at wanted >= 3
