@@ -12,8 +12,9 @@ class Game {
     this.police = new Police(this.map);
 
     const h = this.map.pois.find(p => p.kind === 'hideout');
+    const spawn = this.findWalkableNear(h.tx, h.ty + 1);
     this.player = {
-      x: (h.tx + 0.5) * TILE, y: (h.ty + 2.5) * TILE,
+      x: spawn.x, y: spawn.y,
       cash: 500, rep: 0, heat: 0,
       inv: {}, stash: {},
       gear: {}, smokeBombs: 1,
@@ -38,6 +39,12 @@ class Game {
     this.buildMapCache();
     this.bindInput();
     this.load();
+    // rescue saves where the player ended up inside a wall
+    const ptx = Math.floor(this.player.x / TILE), pty = Math.floor(this.player.y / TILE);
+    if (!this.map.walkable(ptx, pty, this.vehicle().water)) {
+      const safe = this.findWalkableNear(ptx, pty);
+      this.player.x = safe.x; this.player.y = safe.y;
+    }
     this.resize();
     window.addEventListener('resize', () => this.resize());
 
@@ -46,6 +53,19 @@ class Game {
 
     this.last = performance.now();
     requestAnimationFrame(t => this.frame(t));
+  }
+
+  // Nearest walkable tile center to (tx, ty), spiraling outward.
+  findWalkableNear(tx, ty) {
+    for (let r = 0; r < 15; r++) {
+      for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+        if (this.map.walkable(tx + dx, ty + dy, false)) {
+          return { x: (tx + dx + 0.5) * TILE, y: (ty + dy + 0.5) * TILE };
+        }
+      }
+    }
+    return { x: (tx + 0.5) * TILE, y: (ty + 0.5) * TILE };
   }
 
   // ---------- derived stats ----------
@@ -410,7 +430,8 @@ class Game {
       if (p.jail <= 0) {
         p.jail = 0;
         const st = this.map.pois.find(x => x.kind === 'police');
-        p.x = (st.tx + 0.5) * TILE; p.y = (st.ty + 2.5) * TILE;
+        const out = this.findWalkableNear(st.tx, st.ty + 2);
+        p.x = out.x; p.y = out.y;
         this.toast('You are released. Keep your head down for a while.');
       }
       this.updateHUD();
