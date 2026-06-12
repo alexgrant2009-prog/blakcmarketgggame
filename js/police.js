@@ -21,7 +21,50 @@ class Police {
   }
 
   targetCopCount(wanted, lockdown) {
-    return 3 + wanted * 2 + (lockdown ? 5 : 0);
+    return 6 + wanted * 3 + (lockdown ? 6 : 0);
+  }
+
+  // BFS over walkable tiles; returns a list of [tx, ty] steps (start excluded)
+  // or null if unreachable. Shared buffers keep this allocation-free.
+  findPath(sx, sy, tx, ty) {
+    const m = this.map, W = MAP_W, H = MAP_H;
+    if (!m.copWalkable(sx, sy) || !m.copWalkable(tx, ty)) return null;
+    if (sx === tx && sy === ty) return [];
+    if (!this._vis) { this._vis = new Int32Array(W * H); this._par = new Int32Array(W * H); this._q = new Int32Array(W * H); this._stamp = 0; }
+    const vis = this._vis, par = this._par, q = this._q, stamp = ++this._stamp;
+    const si = sy * W + sx, ti = ty * W + tx;
+    let qh = 0, qt = 0;
+    q[qt++] = si; vis[si] = stamp;
+    while (qh < qt) {
+      const cur = q[qh++];
+      if (cur === ti) {
+        const path = [];
+        for (let i = ti; i !== si; i = par[i]) path.push([i % W, (i / W) | 0]);
+        return path.reverse();
+      }
+      const cx = cur % W, cy = (cur / W) | 0;
+      if (cx + 1 < W) this._visit(cx + 1, cy, cur, stamp, q, qt) && qt++;
+      if (cx - 1 >= 0) this._visit(cx - 1, cy, cur, stamp, q, qt) && qt++;
+      if (cy + 1 < H) this._visit(cx, cy + 1, cur, stamp, q, qt) && qt++;
+      if (cy - 1 >= 0) this._visit(cx, cy - 1, cur, stamp, q, qt) && qt++;
+    }
+    return null;
+  }
+  _visit(nx, ny, from, stamp, q, qt) {
+    const ni = ny * MAP_W + nx;
+    if (this._vis[ni] === stamp || !this.map.copWalkable(nx, ny)) return false;
+    this._vis[ni] = stamp; this._par[ni] = from; q[qt] = ni;
+    return true;
+  }
+
+  nearestCopWalkable(tx, ty) {
+    for (let r = 0; r < 15; r++) {
+      for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+        if (this.map.copWalkable(tx + dx, ty + dy)) return { tx: tx + dx, ty: ty + dy };
+      }
+    }
+    return { tx, ty };
   }
 
   spawnCop(nearStation) {
@@ -36,22 +79,33 @@ class Police {
       }
       tries++;
     } while (!m.copWalkable(tx, ty) && tries < 80);
-    if (!m.copWalkable(tx, ty)) { tx = this.spawnPoint.tx; ty = this.spawnPoint.ty + 2; }
+    if (!m.copWalkable(tx, ty)) ({ tx, ty } = this.nearestCopWalkable(this.spawnPoint.tx, this.spawnPoint.ty + 2));
     this.cops.push({
       x: (tx + 0.5) * TILE, y: (ty + 0.5) * TILE,
-      wx: tx, wy: ty,            // waypoint
+      path: null, repathT: 0,
+      stuckT: 0, stuckX: (tx + 0.5) * TILE, stuckY: (ty + 0.5) * TILE, stuckCount: 0,
       chasing: false, stun: 0, undercover: Math.random() < 0.18,
       speed: 110 + Math.random() * 20,
     });
   }
 
-  pickWaypoint(cop) {
+  // Pick a fresh patrol destination and a path to it. Prefers roads so cops
+  // visibly cruise the streets, but accepts any walkable tile as fallback.
+  pickPatrolTarget(cop) {
     const m = this.map;
-    for (let i = 0; i < 30; i++) {
-      const tx = Math.floor(cop.x / TILE) + Math.floor(Math.random() * 21) - 10;
-      const ty = Math.floor(cop.y / TILE) + Math.floor(Math.random() * 21) - 10;
-      if (m.copWalkable(tx, ty) && m.at(tx, ty) === T_ROAD) { cop.wx = tx; cop.wy = ty; return; }
+    const ctx = Math.floor(cop.x / TILE), cty = Math.floor(cop.y / TILE);
+    for (let i = 0; i < 40; i++) {
+      const tx = clamp(ctx + Math.floor(Math.random() * 51) - 25, 0, 83);
+      const ty = clamp(cty + Math.floor(Math.random() * 51) - 25, 0, MAP_H - 1);
+      const wantRoad = i < 30; // first tries insist on a road
+      if (!m.copWalkable(tx, ty) || (wantRoad && m.at(tx, ty) !== T_ROAD)) continue;
+      const path = this.findPath(ctx, cty, tx, ty);
+      if (path && path.length) { cop.path = path; return; }
     }
+    // nowhere reachable from here: this cop is in a sealed pocket, relocate
+    const safe = this.nearestCopWalkable(this.spawnPoint.tx, this.spawnPoint.ty + 2);
+    cop.x = (safe.tx + 0.5) * TILE; cop.y = (safe.ty + 0.5) * TILE;
+    cop.path = null;
   }
 
   update(dt, game) {
@@ -81,18 +135,47 @@ class Police {
       }
       if (cop.chasing && (wanted === 0 || dist > vision * 3.2 || game.inSewerSafe)) cop.chasing = false;
 
-      // movement
-      let mx = 0, my = 0;
+      // movement: follow a BFS path so cops never get pinned on buildings
+      const ctx = Math.floor(cop.x / TILE), cty = Math.floor(cop.y / TILE);
       if (cop.chasing) {
+        cop.repathT -= dt;
+        if (cop.repathT <= 0 || !cop.path || !cop.path.length) {
+          cop.path = this.findPath(ctx, cty, Math.floor(p.x / TILE), Math.floor(p.y / TILE));
+          cop.repathT = 0.5;
+        }
+      } else if (!cop.path || !cop.path.length) {
+        this.pickPatrolTarget(cop);
+      }
+
+      let mx = 0, my = 0;
+      if (cop.chasing && dist < TILE * 1.6) {
+        // close enough: steer straight at the player for the grab
         mx = dx / (dist || 1); my = dy / (dist || 1);
-      } else {
-        const wxp = (cop.wx + 0.5) * TILE, wyp = (cop.wy + 0.5) * TILE;
-        const wd = Math.hypot(wxp - cop.x, wyp - cop.y);
-        if (wd < TILE) this.pickWaypoint(cop);
-        else { mx = (wxp - cop.x) / wd; my = (wyp - cop.y) / wd; }
+      } else if (cop.path && cop.path.length) {
+        const [nx, ny] = cop.path[0];
+        const px = (nx + 0.5) * TILE, py = (ny + 0.5) * TILE;
+        const nd = Math.hypot(px - cop.x, py - cop.y);
+        if (nd < TILE * 0.45) cop.path.shift();
+        else { mx = (px - cop.x) / nd; my = (py - cop.y) / nd; }
       }
       const spd = cop.chasing ? cop.speed * (lockdown ? 1.15 : 1) : cop.speed * 0.45;
       this.moveWithCollision(cop, mx * spd * dt, my * spd * dt);
+
+      // watchdog: a cop that hasn't covered ground in 1.5s is stuck — give it
+      // a new route; three strikes and it gets relocated to the station
+      cop.stuckT += dt;
+      if (cop.stuckT >= 1.5) {
+        const moved = Math.hypot(cop.x - cop.stuckX, cop.y - cop.stuckY);
+        if (moved < TILE * 0.4 && cop.stun <= 0) {
+          cop.path = null; cop.repathT = 0;
+          if (++cop.stuckCount >= 3) {
+            const safe = this.nearestCopWalkable(this.spawnPoint.tx, this.spawnPoint.ty + 2);
+            cop.x = (safe.tx + 0.5) * TILE; cop.y = (safe.ty + 0.5) * TILE;
+            cop.stuckCount = 0;
+          }
+        } else cop.stuckCount = 0;
+        cop.stuckT = 0; cop.stuckX = cop.x; cop.stuckY = cop.y;
+      }
 
       // scout warning
       if (game.hasWorker('scout') && dist < vision * 1.6 && !cop.warned) { cop.warned = true; }
