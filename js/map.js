@@ -88,7 +88,12 @@ function buildMap() {
     { id: 'buyer_bm',      kind: 'buyer',  name: 'Underground Broker',  icon: '🎩', tx: 52, ty: 46, repReq: 150 },
     { id: 'buyer_rich',    kind: 'buyer',  name: 'Penthouse Client',    icon: '🏨', tx: 20, ty: 60, repReq: 400 },
     { id: 'hideout',       kind: 'hideout', name: 'Your Hideout',       icon: '🏠', tx: 26, ty: 28 },
-    { id: 'police',        kind: 'police',  name: 'Police Station',     icon: '🏛️', tx: 47, ty: 26 },
+    { id: 'police',        kind: 'police',  name: 'Central Precinct',   icon: '🏛️', tx: 47, ty: 26 },
+    { id: 'police_slums',  kind: 'police',  name: 'Slums Precinct',     icon: '🏛️', tx: 15, ty: 17 },
+    { id: 'police_north',  kind: 'police',  name: 'North Precinct',     icon: '🏛️', tx: 76, ty: 10 },
+    { id: 'police_rich',   kind: 'police',  name: 'Hilltop Precinct',   icon: '🏛️', tx: 8,  ty: 66 },
+    { id: 'police_south',  kind: 'police',  name: 'South Precinct',     icon: '🏛️', tx: 40, ty: 56 },
+    { id: 'police_docks',  kind: 'police',  name: 'Harbor Precinct',    icon: '🏛️', tx: 80, ty: 60 },
     { id: 'warehouse_a',   kind: 'heist',  name: 'Bonded Warehouse A',  icon: '📦', tx: 78, ty: 38, repReq: 150 },
     { id: 'warehouse_b',   kind: 'heist',  name: 'Bonded Warehouse B',  icon: '📦', tx: 66, ty: 58, repReq: 150 },
   ];

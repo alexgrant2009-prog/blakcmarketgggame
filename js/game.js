@@ -429,7 +429,7 @@ class Game {
       p.jail -= dt;
       if (p.jail <= 0) {
         p.jail = 0;
-        const st = this.map.pois.find(x => x.kind === 'police');
+        const st = this.police.nearestStation(p.x, p.y);
         const out = this.findWalkableNear(st.tx, st.ty + 2);
         p.x = out.x; p.y = out.y;
         this.toast('You are released. Keep your head down for a while.');

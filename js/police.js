@@ -11,7 +11,17 @@ class Police {
     this.cops = [];
     this.checkpoints = [];
     this.raidTimer = -1;       // counts down to a hideout raid at wanted 5
-    this.spawnPoint = map.pois.find(p => p.kind === 'police');
+    this.stations = map.pois.filter(p => p.kind === 'police');
+  }
+
+  randomStation() { return this.stations[Math.floor(Math.random() * this.stations.length)]; }
+  nearestStation(x, y) {
+    let best = this.stations[0], bd = Infinity;
+    for (const s of this.stations) {
+      const d = Math.hypot((s.tx + 0.5) * TILE - x, (s.ty + 0.5) * TILE - y);
+      if (d < bd) { bd = d; best = s; }
+    }
+    return best;
   }
 
   wantedFromHeat(heat) {
@@ -21,7 +31,7 @@ class Police {
   }
 
   targetCopCount(wanted, lockdown) {
-    return 6 + wanted * 3 + (lockdown ? 6 : 0);
+    return 10 + wanted * 4 + (lockdown ? 8 : 0);
   }
 
   // BFS over walkable tiles; returns a list of [tx, ty] steps (start excluded)
@@ -69,17 +79,18 @@ class Police {
 
   spawnCop(nearStation) {
     const m = this.map;
+    const station = this.randomStation();
     let tx, ty, tries = 0;
     do {
-      if (nearStation && this.spawnPoint) {
-        tx = this.spawnPoint.tx + Math.floor(Math.random() * 7) - 3;
-        ty = this.spawnPoint.ty + Math.floor(Math.random() * 7) - 3;
+      if (nearStation) {
+        tx = station.tx + Math.floor(Math.random() * 7) - 3;
+        ty = station.ty + Math.floor(Math.random() * 7) - 3;
       } else {
         tx = Math.floor(Math.random() * 84); ty = Math.floor(Math.random() * MAP_H);
       }
       tries++;
     } while (!m.copWalkable(tx, ty) && tries < 80);
-    if (!m.copWalkable(tx, ty)) ({ tx, ty } = this.nearestCopWalkable(this.spawnPoint.tx, this.spawnPoint.ty + 2));
+    if (!m.copWalkable(tx, ty)) ({ tx, ty } = this.nearestCopWalkable(station.tx, station.ty + 2));
     this.cops.push({
       x: (tx + 0.5) * TILE, y: (ty + 0.5) * TILE,
       path: null, repathT: 0,
@@ -103,7 +114,8 @@ class Police {
       if (path && path.length) { cop.path = path; return; }
     }
     // nowhere reachable from here: this cop is in a sealed pocket, relocate
-    const safe = this.nearestCopWalkable(this.spawnPoint.tx, this.spawnPoint.ty + 2);
+    const st = this.nearestStation(cop.x, cop.y);
+    const safe = this.nearestCopWalkable(st.tx, st.ty + 2);
     cop.x = (safe.tx + 0.5) * TILE; cop.y = (safe.ty + 0.5) * TILE;
     cop.path = null;
   }
@@ -143,6 +155,14 @@ class Police {
           cop.path = this.findPath(ctx, cty, Math.floor(p.x / TILE), Math.floor(p.y / TILE));
           cop.repathT = 0.5;
         }
+      } else if (wanted >= 4 && (wanted >= 5 || dist < TILE * 30)) {
+        // manhunt: at wanted 4+ the whole force converges on your position
+        cop.huntT = (cop.huntT || 0) - dt;
+        if (cop.huntT <= 0) {
+          cop.path = this.findPath(ctx, cty, Math.floor(p.x / TILE), Math.floor(p.y / TILE)) || cop.path;
+          cop.huntT = 2.5;
+        }
+        if (!cop.path || !cop.path.length) this.pickPatrolTarget(cop);
       } else if (!cop.path || !cop.path.length) {
         this.pickPatrolTarget(cop);
       }
@@ -158,7 +178,7 @@ class Police {
         if (nd < TILE * 0.45) cop.path.shift();
         else { mx = (px - cop.x) / nd; my = (py - cop.y) / nd; }
       }
-      const spd = cop.chasing ? cop.speed * (lockdown ? 1.15 : 1) : cop.speed * 0.45;
+      const spd = cop.chasing ? cop.speed * (lockdown ? 1.15 : 1) : cop.speed * (wanted >= 4 ? 0.7 : 0.45);
       this.moveWithCollision(cop, mx * spd * dt, my * spd * dt);
 
       // watchdog: a cop that hasn't covered ground in 1.5s is stuck — give it
@@ -169,7 +189,8 @@ class Police {
         if (moved < TILE * 0.4 && cop.stun <= 0) {
           cop.path = null; cop.repathT = 0;
           if (++cop.stuckCount >= 3) {
-            const safe = this.nearestCopWalkable(this.spawnPoint.tx, this.spawnPoint.ty + 2);
+            const st = this.nearestStation(cop.x, cop.y);
+            const safe = this.nearestCopWalkable(st.tx, st.ty + 2);
             cop.x = (safe.tx + 0.5) * TILE; cop.y = (safe.ty + 0.5) * TILE;
             cop.stuckCount = 0;
           }
