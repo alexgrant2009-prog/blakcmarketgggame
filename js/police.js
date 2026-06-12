@@ -155,6 +155,10 @@ class Police {
     }
 
     const vision = game.policeVision() * TILE;
+    const inSafe = game.inHideoutZone();
+    if (inSafe && this.cops.some(c => c.chasing)) {
+      game.toast('🏠 You made it home — the cops won\'t touch you in your hideout.');
+    }
     for (const cop of this.cops) {
       if (cop.stun > 0) { cop.stun -= dt; continue; }
       const dx = p.x - cop.x, dy = p.y - cop.y;
@@ -164,7 +168,7 @@ class Police {
       // carrying contraband — or sees you with any wanted star — gives chase.
       const carrying = game.carriedRisk() > 0;
       const losClear = this.hasLineOfSight(cop.x, cop.y, p.x, p.y);
-      const inSight = dist < vision * (cop.undercover ? 1.25 : 1) && losClear && !game.inSewerSafe;
+      const inSight = dist < vision * (cop.undercover ? 1.25 : 1) && losClear && !game.inSewerSafe && !inSafe;
       if (inSight && (carrying || wanted >= 1)) {
         if (!cop.chasing) { cop.chasing = true; game.toast('🚨 A cop spotted you and is chasing! (Q = smoke bomb, or break his line of sight)'); }
         cop.lostT = 0;
@@ -172,10 +176,10 @@ class Police {
       // losing the chase: stay out of his sight for 2.5s, get far away,
       // or vanish into the sewers
       if (cop.chasing) {
-        if (dist < vision * 2.5 && losClear && !game.inSewerSafe) cop.lostT = 0;
+        if (dist < vision * 2.5 && losClear && !game.inSewerSafe && !inSafe) cop.lostT = 0;
         else {
           cop.lostT = (cop.lostT || 0) + dt;
-          if (cop.lostT > 2.5 || dist > vision * 3.2 || game.inSewerSafe) cop.chasing = false;
+          if (cop.lostT > 2.5 || dist > vision * 3.2 || game.inSewerSafe || inSafe) cop.chasing = false;
         }
       }
 
@@ -234,8 +238,10 @@ class Police {
       if (game.hasWorker('scout') && dist < vision * 1.6 && !cop.warned) { cop.warned = true; }
       else if (dist > vision * 2) cop.warned = false;
 
-      // contact with an officer ALWAYS has consequences
-      if (cop.chasing && dist < TILE * 1.3) {
+      // contact with an officer ALWAYS has consequences — except at home
+      if (inSafe) {
+        // untouchable inside the hideout safe zone
+      } else if (cop.chasing && dist < TILE * 1.3) {
         game.bust('A cop caught you. In this city, getting caught means death.');
       } else if (dist < TILE * 1.1) {
         if (carrying || wanted >= 2) {

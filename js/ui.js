@@ -276,6 +276,7 @@ Game.prototype.panelHelp = function () {
   </table>
   <h3>Wanted level ★</h3>
   <div class="small">Crimes build heat. ★ police notice you • ★★ extra patrols • ★★★ checkpoints • ★★★★ manhunt — the force converges on you • ★★★★★ city lockdown + hideout raid.
+  🏠 Your hideout is a SAFE ZONE (the gold circle): police cannot chase, grab or kill you inside it. Reach it during a chase and they back off.
   👁️ Cops chase what they SEE: if an officer has line of sight on you while you carry contraband — or while you have any star — he chases. Buildings block their view, so duck behind corners; stay out of sight for a few seconds and he gives up. At ★★★★ the whole force converges on you regardless.
   ☠️ NEVER TOUCH A COP. Bump one while carrying contraband (or at ★★+) and you DIE on the spot: everything you carry is lost, 5 rep, and up to 35% of your cash. You respawn at your hideout — only the stash survives. Bump one while clean and you get shoved off with a warning — and your heat rises. Heat fades with time, or hire a hacker.</div>
   <h3>Reputation</h3>

@@ -87,6 +87,11 @@ class Game {
     return Math.max(2.6, v);
   }
   itemUnlocked(it) { return this.player.rep >= ITEM_TIER_REP[it.tier]; }
+  // Safe zone: within ~3.5 tiles of the hideout the police can't touch you
+  inHideoutZone() {
+    const h = this.map.pois.find(p => p.kind === 'hideout');
+    return Math.hypot(this.player.x - (h.tx + 0.5) * TILE, this.player.y - (h.ty + 0.5) * TILE) < TILE * 3.5;
+  }
   districtOfPlayer() { return districtAt(Math.floor(this.player.x / TILE), Math.floor(this.player.y / TILE)); }
 
   addHeat(n) {

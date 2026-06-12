@@ -55,6 +55,21 @@ Game.prototype.render = function () {
   ctx.translate(-camX, -camY);
   ctx.textAlign = 'center';
 
+  // hideout safe zone
+  {
+    const h = this.map.pois.find(p => p.kind === 'hideout');
+    const hx = (h.tx + 0.5) * TILE, hy = (h.ty + 0.5) * TILE;
+    ctx.fillStyle = 'rgba(255,216,107,0.07)';
+    ctx.beginPath(); ctx.arc(hx, hy, TILE * 3.5, 0, 7); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,216,107,0.35)';
+    ctx.setLineDash([6, 6]);
+    ctx.beginPath(); ctx.arc(hx, hy, TILE * 3.5, 0, 7); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(255,216,107,0.5)';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.fillText('SAFE ZONE', hx, hy + TILE * 3.1);
+  }
+
   // sewer manholes
   ctx.font = `${TILE * 0.8}px serif`;
   for (const sw of this.map.sewers) {
