@@ -257,7 +257,8 @@ class Game {
     const w = this.wanted();
     const lostItems = [];
     for (const id in this.player.inv) lostItems.push(`${this.player.inv[id]} × ${ITEMS[id].name}`);
-    const fine = Math.min(this.player.cash, 100 + w * 150 + Math.floor(this.player.cash * 0.05));
+    // the street takes a cut, but never everything — no death spiral to $0
+    const fine = Math.min(Math.floor(this.player.cash * 0.35), 100 + w * 150 + Math.floor(this.player.cash * 0.05));
     const repLoss = 4 * Math.max(1, w);
     this.player.inv = {};
     this.player.cash -= fine;
@@ -321,6 +322,16 @@ class Game {
       });
     }
   }
+  // Always-available street work so a broke player can climb back in
+  doOddJob() {
+    if ((this.oddJobT || 0) > 0) return;
+    this.oddJobT = 45;
+    const pay = 60;
+    this.player.cash += pay;
+    this.toast(`🧹 You ran errands around the block. +$${pay}. Honest work... gross.`);
+    this.renderPanel();
+  }
+
   acceptMission(idx) {
     if (this.missions.active) { this.toast('Finish or abandon your current contract first.'); return; }
     this.missions.active = this.missions.offers.splice(idx, 1)[0];
@@ -503,6 +514,8 @@ class Game {
         }
       }
     }
+
+    this.oddJobT = Math.max(0, (this.oddJobT || 0) - dt);
 
     // autosave
     this.saveT -= dt;
