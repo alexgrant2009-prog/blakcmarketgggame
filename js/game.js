@@ -259,7 +259,7 @@ class Game {
     for (const id in this.player.inv) lostItems.push(`${this.player.inv[id]} × ${ITEMS[id].name}`);
     // the street takes a cut, but never everything — no death spiral to $0
     const fine = Math.min(Math.floor(this.player.cash * 0.35), 100 + w * 150 + Math.floor(this.player.cash * 0.05));
-    const repLoss = 4 * Math.max(1, w);
+    const repLoss = 5; // dying always costs 5 rep, no more, no less
     this.player.inv = {};
     this.player.cash -= fine;
     this.addRep(-repLoss);
