@@ -48,7 +48,7 @@ class Game {
     this.resize();
     window.addEventListener('resize', () => this.resize());
 
-    if (!localStorage.getItem(SAVE_KEY)) this.openPanel('help');
+    this.openPanel('help'); // always show the instructions before playing
     this.toast('Welcome to the city. Find a dealer (🏚️) and start small.');
 
     this.last = performance.now();
