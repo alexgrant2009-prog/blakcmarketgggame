@@ -2,12 +2,16 @@
 // Main game: player, input, interactions, missions, UI and rendering.
 
 const SAVE_KEY = 'bms_save_v1';
-const ITEM_TIER_REP = [0, 50, 150, 400]; // rep needed to trade each item tier
+const ITEM_TIER_REP = [0, 50, 150, 400, 550, 800]; // rep needed to trade each item tier
+const ISLAND_REP = 550;                  // rep needed to reach Smuggler's Isle
 const DAY_LENGTH = 240;                  // seconds per in-game day
 
 class Game {
   constructor() {
-    this.map = buildMap();
+    this.maps = { city: buildMap(), island: buildIsland() };
+    this.area = 'city';
+    this.map = this.maps.city;
+    setActiveMap(this.map);
     this.economy = new Economy();
     this.police = new Police(this.map);
 
@@ -21,6 +25,7 @@ class Game {
       vehicle: 'foot', ownedVehicles: ['foot'],
       workers: [], upgrades: {},
       day: 1, dayT: 0, jail: 0, disguiseUsedDay: 0,
+      area: 'city', areaPos: { city: null, island: null },
       stats: { earned: 0, busts: 0, missions: 0 },
     };
     this.missions = { offers: [], active: null };
@@ -36,9 +41,11 @@ class Game {
 
     this.canvas = document.getElementById('game');
     this.ctx = this.canvas.getContext('2d');
-    this.buildMapCache();
     this.bindInput();
     this.load();
+    // sync the active map / police / cache to the saved area
+    this.area = this.player.area || 'city';
+    this.applyArea();
     // rescue saves where the player ended up inside a wall
     const ptx = Math.floor(this.player.x / TILE), pty = Math.floor(this.player.y / TILE);
     if (!this.map.walkable(ptx, pty, this.vehicle().water)) {
@@ -173,7 +180,34 @@ class Game {
     else if (poi.kind === 'buyer') this.openBuyer(poi);
     else if (poi.kind === 'hideout') this.openHideout();
     else if (poi.kind === 'heist') this.tryHeist(poi);
+    else if (poi.kind === 'ferry') this.travelTo(poi.to);
     else if (poi.kind === 'police') this.toast('Probably best not to walk into the police station.');
+  }
+
+  // ---------- travel between the city and the island ----------
+  applyArea() {
+    this.map = this.maps[this.area];
+    setActiveMap(this.map);
+    this.police.bindMap(this.map);
+    this.buildMapCache();
+  }
+  travelTo(area) {
+    if (!this.maps[area] || area === this.area) return;
+    if (area === 'island' && this.player.rep < ISLAND_REP) {
+      this.toast(`🔒 The ferry crew won't take you yet. Reach ${ISLAND_REP} rep.`); return;
+    }
+    this.player.areaPos[this.area] = { x: this.player.x, y: this.player.y };
+    this.area = area; this.player.area = area;
+    this.applyArea();
+    // arrive at the destination's ferry dock
+    const dock = this.map.pois.find(p => p.kind === 'ferry');
+    const s = this.findWalkableNear(dock.tx, dock.ty + 1);
+    this.player.x = s.x; this.player.y = s.y;
+    this.player.heat = Math.floor(this.player.heat * 0.5); // crossing the water shakes some heat
+    this.closePanel();
+    this.toast(area === 'island'
+      ? "⛴️ Welcome to Smuggler's Isle — premium goods, premium prices. The local cops don't know you... yet."
+      : '⛴️ Back on the mainland.');
   }
 
   // ---------- trading ----------
@@ -381,10 +415,7 @@ class Game {
     if (this.player.cash < cost) { this.toast('Not enough cash.'); return; }
     this.player.cash -= cost;
     this.player.upgrades[id] = lvl + 1;
-    if (id === 'tunnel' && !this.map.sewers.some(s => s.id === 'sw_hideout')) {
-      const h = this.map.pois.find(p => p.kind === 'hideout');
-      this.map.sewers.push({ id: 'sw_hideout', name: 'Hideout Tunnel', tx: h.tx + 1, ty: h.ty });
-    }
+    if (id === 'tunnel') this.addHideoutTunnel();
     this.toast(`🔨 Built: ${up.name}${up.levels.length > 1 ? ' Lv' + (lvl + 1) : ''}`);
     this.renderPanel();
   }
@@ -612,11 +643,15 @@ class Game {
       Object.assign(this.economy.demand, s.econ.demand);
       Object.assign(this.economy.saturation, s.econ.saturation);
       if (s.mission) this.missions = s.mission;
-      if (this.player.upgrades.tunnel && !this.map.sewers.some(x => x.id === 'sw_hideout')) {
-        const h = this.map.pois.find(p => p.kind === 'hideout');
-        this.map.sewers.push({ id: 'sw_hideout', name: 'Hideout Tunnel', tx: h.tx + 1, ty: h.ty });
-      }
+      if (this.player.upgrades.tunnel) this.addHideoutTunnel();
     } catch (err) { console.warn('Bad save, starting fresh', err); }
+  }
+  // The secret-tunnel upgrade adds a sewer entrance at the city hideout.
+  addHideoutTunnel() {
+    const city = this.maps.city;
+    if (city.sewers.some(x => x.id === 'sw_hideout')) return;
+    const h = city.pois.find(p => p.kind === 'hideout');
+    city.sewers.push({ id: 'sw_hideout', name: 'Hideout Tunnel', tx: h.tx + 1, ty: h.ty });
   }
   resetGame() {
     if (!confirm('Wipe your save and start over?')) return;

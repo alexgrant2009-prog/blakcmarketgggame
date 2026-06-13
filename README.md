@@ -35,11 +35,15 @@ Your progress autosaves to the browser every 10 seconds.
 
 ## 🗺️ The city
 
-Six districts — the Slums, Downtown, the Black Market, Warehouse Row, the Rich District and the Docks — connected by roads, back alleys and a sewer fast-travel network the police can't follow you into. A police station sits in the middle of it all.
+Six districts — the Slums, Downtown, the Black Market, Warehouse Row, the Rich District and the Docks — connected by roads, back alleys and a sewer fast-travel network the police can't follow you into. Six police precincts are spread across the map.
+
+## ⛴️ Smuggler's Isle
+
+At **550 reputation**, the ferry at The Docks opens up a second island map. It trades in premium goods — **Stolen Artifacts** and **Smuggled Gold** — that cost a fortune to buy but sell for huge money in the Resort Strip. The island has its own police force, its own hidden escape coves, and an island safe house. Crossing the water also shakes off the mainland cops. Ride the ferry back whenever you like.
 
 ## 📦 Contraband
 
-Counterfeit Goods, Fake IDs, Rare Medicine, Luxury Watches, Stolen Tech and Encrypted Drives — each with its own buy price, sell price, risk level and live demand.
+Counterfeit Goods, Fake IDs, Rare Medicine, Luxury Watches, Stolen Tech and Encrypted Drives — plus the island-only Stolen Artifacts and Smuggled Gold. Each has its own buy price, sell price, risk level and live demand.
 
 ## 📈 Dynamic economy
 

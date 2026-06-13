@@ -9,6 +9,9 @@ const ITEMS = {
   watches:     { id: 'watches',     name: 'Luxury Watches',    icon: '⌚', base: 380, risk: 2, tier: 1 },
   tech:        { id: 'tech',        name: 'Stolen Tech',       icon: '💻', base: 560, risk: 3, tier: 2 },
   drives:      { id: 'drives',      name: 'Encrypted Drives',  icon: '💾', base: 950, risk: 4, tier: 3 },
+  // premium goods — only traded on Smuggler's Isle
+  artifact:    { id: 'artifact',    name: 'Stolen Artifacts',  icon: '🏺', base: 1600, risk: 4, tier: 4 },
+  gold:        { id: 'gold',        name: 'Smuggled Gold',     icon: '🪙', base: 2600, risk: 5, tier: 5 },
 };
 const ITEM_LIST = Object.values(ITEMS);
 
@@ -60,6 +63,7 @@ const REP_TIERS = [
   { rep: 50,   title: 'Runner',      perk: 'Docks dealer, scanner, license, courier' },
   { rep: 150,  title: 'Hustler',     perk: 'Warehouse dealer, motorcycle, van, lockpick' },
   { rep: 400,  title: 'Smuggler',    perk: 'Black-market broker, rich buyers, armored truck, boat' },
+  { rep: 550,  title: 'Kingfish',    perk: "⛴️ Ferry to Smuggler's Isle — premium goods & huge payouts" },
   { rep: 1000, title: 'Operator',    perk: 'Elite penthouse buyer, encrypted drives demand' },
   { rep: 2500, title: 'Kingpin',     perk: 'You control the underground economy' },
 ];
@@ -85,6 +89,10 @@ const DISTRICT_INFO = {
   warehouse:  { name: 'Warehouse Row',   sellMult: 0.95, buyMult: 0.85 },
   docks:      { name: 'The Docks',       sellMult: 1.15, buyMult: 0.9 },
   rich:       { name: 'Rich District',   sellMult: 1.4,  buyMult: 1.2 },
+  // Smuggler's Isle — far pricier to buy, but the payouts are huge
+  island_port:     { name: 'Isle Port',        sellMult: 1.45, buyMult: 1.15 },
+  island_resort:   { name: 'Resort Strip',     sellMult: 1.9,  buyMult: 1.35 },
+  island_smuggler: { name: "Smuggler's Wharf",  sellMult: 1.65, buyMult: 1.05 },
 };
 
 const FIRST_NAMES = ['Vic','Lena','Marco','Dom','Sasha','Rico','Ana','Kez','Otto','Mira','Jax','Nadia'];

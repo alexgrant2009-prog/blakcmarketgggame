@@ -7,6 +7,11 @@ const WANTED_THRESHOLDS = [0, 15, 35, 55, 75, 92]; // heat needed for each star
 
 class Police {
   constructor(map) {
+    this.bindMap(map);
+  }
+
+  // Point the force at a (new) map: fresh patrols, that map's precincts.
+  bindMap(map) {
     this.map = map;
     this.cops = [];
     this.checkpoints = [];

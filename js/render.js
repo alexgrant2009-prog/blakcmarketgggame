@@ -11,10 +11,11 @@ Game.prototype.buildMapCache = function () {
   const c = document.createElement('canvas');
   c.width = MAP_W * TILE; c.height = MAP_H * TILE;
   const g = c.getContext('2d');
+  const waterCol = this.map.water || TILE_COLORS[T_WATER];
   for (let y = 0; y < MAP_H; y++) {
     for (let x = 0; x < MAP_W; x++) {
       const t = this.map.at(x, y);
-      g.fillStyle = t === T_BLOCK ? this.map.blockColor[y * MAP_W + x] : TILE_COLORS[t];
+      g.fillStyle = t === T_BLOCK ? this.map.blockColor[y * MAP_W + x] : (t === T_WATER ? waterCol : TILE_COLORS[t]);
       g.fillRect(x * TILE, y * TILE, TILE, TILE);
       if (t === T_BLOCK) { // simple rooftop shading
         g.fillStyle = 'rgba(255,255,255,0.04)';
@@ -33,11 +34,7 @@ Game.prototype.buildMapCache = function () {
   // district labels baked into the map
   g.font = 'bold 22px monospace';
   g.fillStyle = 'rgba(255,255,255,0.13)';
-  const labels = [
-    ['THE SLUMS', 9, 12], ['DOWNTOWN', 42, 12], ['WAREHOUSE ROW', 64, 12],
-    ['BLACK MARKET', 33, 38], ['RICH DISTRICT', 6, 42], ['THE DOCKS', 84.2, 8],
-  ];
-  for (const [txt, tx, ty] of labels) g.fillText(txt, tx * TILE, ty * TILE);
+  for (const [txt, tx, ty] of (this.map.labels || [])) g.fillText(txt, tx * TILE, ty * TILE);
   this.mapCache = c;
 };
 
@@ -91,7 +88,7 @@ Game.prototype.render = function () {
     ctx.fillText(poi.icon, x, y + TILE * 0.4);
     ctx.globalAlpha = 1;
     ctx.font = 'bold 11px sans-serif';
-    ctx.fillStyle = locked ? '#888' : poi.kind === 'police' ? '#7da7ff' : poi.kind === 'hideout' ? '#ffd86b' : '#ddd';
+    ctx.fillStyle = locked ? '#888' : poi.kind === 'police' ? '#7da7ff' : poi.kind === 'hideout' ? '#ffd86b' : poi.kind === 'ferry' ? '#5fd0e0' : '#ddd';
     ctx.fillText((locked ? '🔒 ' : '') + poi.name, x, y - TILE * 0.85);
   }
 
@@ -204,7 +201,8 @@ Game.prototype.renderMinimap = function (ctx, cw) {
   // POIs
   for (const poi of this.map.pois) {
     const c = poi.kind === 'dealer' ? '#c084fc' : poi.kind === 'buyer' ? '#4ade80' :
-      poi.kind === 'hideout' ? '#ffd86b' : poi.kind === 'police' ? '#60a5fa' : '#fb923c';
+      poi.kind === 'hideout' ? '#ffd86b' : poi.kind === 'police' ? '#60a5fa' :
+      poi.kind === 'ferry' ? '#5fd0e0' : '#fb923c';
     dot((poi.tx + 0.5) * TILE, (poi.ty + 0.5) * TILE, c, 2.5);
   }
   // cops, if you have a scanner or scout

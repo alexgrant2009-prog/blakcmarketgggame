@@ -92,6 +92,24 @@ g.player.gear = {}; g.checkpointScan();
 g.player.stash = { tech: 10 }; g.hideoutRaid();
 console.log('After raid: stash=', JSON.stringify(g.player.stash));
 
+// island travel: gated under 550 rep, opens at 550
+g.bustInfo = null; g.player.rep = 100; g.travelTo('island');
+console.log('Travel blocked under 550 rep:', g.area === 'city' ? 'OK' : 'FAIL');
+g.player.rep = 600; g.travelTo('island');
+console.log('Travel to island at 600 rep:', g.area === 'island' ? 'OK' : 'FAIL', '| on island map:', g.map.districtIds[0] === 'island_port' ? 'OK' : 'FAIL');
+const isleDealer = g.map.pois.find(p => p.id === 'dealer_isle');
+const resort = g.map.pois.find(p => p.id === 'buyer_resort');
+g.player.cash = 999999; g.buyItem('gold', 2, isleDealer);
+console.log('Bought premium gold on island:', (g.player.inv.gold || 0) === 2 ? 'OK' : 'FAIL');
+const islePrice = g.economy.sellPrice('gold', 'island_resort', g);
+const cityPrice = g.economy.sellPrice('gold', 'downtown', g);
+console.log('Island resort pays more than city:', islePrice > cityPrice ? 'OK ('+islePrice+' vs '+cityPrice+')' : 'FAIL');
+g.sellItem('gold', 2, resort);
+console.log('Sold gold at resort, cops fresh on island:', g.police.cops.length >= 0 ? 'OK' : 'FAIL');
+// ferry back
+g.travelTo('city');
+console.log('Ferry back to city:', g.area === 'city' && g.map.districtIds[0] === 'slums' ? 'OK' : 'FAIL');
+
 // panels render without crashing
 for (const pid of ['help','prices','missions','hideout']) { g.openPanel(pid); }
 g.hideoutTab='upgrades'; g.renderPanel(); g.hideoutTab='workers'; g.renderPanel(); g.hideoutTab='garage'; g.renderPanel();

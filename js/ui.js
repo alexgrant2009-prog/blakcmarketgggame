@@ -196,7 +196,8 @@ Game.prototype.panelHideout = function () {
     }
   }
 
-  return `<h2>🏠 Your Hideout</h2><div class="tabs">${tabs}</div>${body}
+  const hideoutPoi = this.map.pois.find(x => x.kind === 'hideout');
+  return `<h2>${hideoutPoi.icon} ${hideoutPoi.name}</h2><div class="tabs">${tabs}</div>${body}
     <div class="small footer">Cash ${fmt$(p.cash)} • Rep ${Math.floor(p.rep)} • Busts: ${p.stats.busts} • Total earned: ${fmt$(p.stats.earned)}
     <button onclick="game.resetGame()" class="danger-btn">Reset Save</button></div>`;
 };
@@ -225,7 +226,7 @@ Game.prototype.panelMissions = function () {
 
 // ---------- prices ----------
 Game.prototype.panelPrices = function () {
-  const districts = Object.keys(DISTRICT_INFO);
+  const districts = this.map.districtIds || Object.keys(DISTRICT_INFO);
   let head = '<tr><th>Item</th><th>Demand</th>' + districts.map(d => `<th>${DISTRICT_INFO[d].name}</th>`).join('') + '</tr>';
   let rows = '';
   for (const it of ITEM_LIST) {
@@ -279,6 +280,8 @@ Game.prototype.panelHelp = function () {
   🏠 Your hideout is a SAFE ZONE (the gold circle): police cannot chase, grab or kill you inside it. Reach it during a chase and they back off.
   👁️ Cops chase what they SEE: if an officer has line of sight on you while you carry contraband — or while you have any star — he chases. Buildings block their view, so duck behind corners; stay out of sight for a few seconds and he gives up. At ★★★★ the whole force converges on you regardless.
   ☠️ NEVER TOUCH A COP. Bump one while carrying contraband (or at ★★+) and you DIE on the spot: everything you carry is lost, 50–65% of your cash, and reputation (5 below 100 rep, 15 below 200, 35 below 300, 50 above). You respawn at your hideout — only the stash survives. Bump one while clean and you get shoved off with a warning — and your heat rises. Heat fades with time, or hire a hacker.</div>
+  <h3>⛴️ Smuggler's Isle</h3>
+  <div class="small">At <b>550 rep</b> the ferry (⛴️ at The Docks) opens up. The island deals in premium goods — Stolen Artifacts and Smuggled Gold — that cost a fortune but sell for huge money in the Resort Strip. It has its own police, its own escape coves and an island safe house. Crossing the water also leaves the mainland cops behind. Ride the ferry back anytime.</div>
   <h3>Reputation</h3>
   <div class="small">${REP_TIERS.map(t => `<b>${t.rep}</b> ${t.title} — ${t.perk}`).join('<br>')}</div>
   <button onclick="game.closePanel()">Hit the streets →</button>`;
