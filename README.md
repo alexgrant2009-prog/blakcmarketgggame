@@ -59,7 +59,7 @@ Crimes build **heat**, heat sets your **wanted level**:
 | ★★★★ | Manhunt — the whole force converges on you |
 | ★★★★★ | City lockdown + hideout raid incoming |
 
-☠️ **If a cop catches you, you die**: everything you're carrying is lost, plus a cash hit and reputation. You respawn at your hideout — only your stash survives. Heat fades over time — or hire a hacker.
+☠️ **If a cop catches you, you die**: everything you're carrying is lost, 50–65% of your cash, and reputation (5 below 100 rep, 15 below 200, 35 below 300, 50 above 300). You respawn at your hideout — only your stash survives. Your hideout is a safe zone where police can't touch you. Heat fades over time — or hire a hacker.
 
 ## 🏠 Hideout
 

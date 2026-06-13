@@ -262,9 +262,11 @@ class Game {
     const w = this.wanted();
     const lostItems = [];
     for (const id in this.player.inv) lostItems.push(`${this.player.inv[id]} × ${ITEMS[id].name}`);
-    // the street takes a cut, but never everything — no death spiral to $0
-    const fine = Math.min(Math.floor(this.player.cash * 0.35), 100 + w * 150 + Math.floor(this.player.cash * 0.05));
-    const repLoss = 5; // dying always costs 5 rep, no more, no less
+    // the street takes 50-65% of your cash
+    const fine = Math.floor(this.player.cash * (0.5 + Math.random() * 0.15));
+    // reputation loss scales with how big you've gotten
+    const rep = this.player.rep;
+    const repLoss = rep >= 300 ? 50 : rep >= 200 ? 35 : rep >= 100 ? 15 : 5;
     this.player.inv = {};
     this.player.cash -= fine;
     this.addRep(-repLoss);
