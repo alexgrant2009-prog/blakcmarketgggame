@@ -16,6 +16,8 @@ function makeEl(id) {
 global.document = {
   getElementById: id => makeEl(id),
   createElement: tag => makeEl('tmp' + Math.random()),
+  addEventListener: () => {},
+  hidden: false,
 };
 const listeners = {};
 global.window = { innerWidth: 800, innerHeight: 600, addEventListener: (e, f) => { (listeners[e] ??= []).push(f); } };

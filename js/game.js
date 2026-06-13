@@ -48,6 +48,12 @@ class Game {
     this.resize();
     window.addEventListener('resize', () => this.resize());
 
+    // Save the moment the tab is closed, hidden, or switched away from, so
+    // progress is never lost between autosaves (covers mobile backgrounding).
+    window.addEventListener('beforeunload', () => this.save());
+    window.addEventListener('pagehide', () => this.save());
+    document.addEventListener('visibilitychange', () => { if (document.hidden) this.save(); });
+
     this.openPanel('help'); // always show the instructions before playing
     this.toast('Welcome to the city. Find a dealer (🏚️) and start small.');
 
@@ -535,7 +541,7 @@ class Game {
 
     // autosave
     this.saveT -= dt;
-    if (this.saveT <= 0) { this.saveT = 10; this.save(); }
+    if (this.saveT <= 0) { this.saveT = 5; this.save(); }
 
     // toasts
     this.toasts = this.toasts.filter(t0 => (t0.t -= dt) > 0);
@@ -581,12 +587,20 @@ class Game {
 
   // ---------- save / load ----------
   save() {
-    const e = this.economy;
-    localStorage.setItem(SAVE_KEY, JSON.stringify({
-      player: this.player,
-      econ: { drift: e.drift, demand: e.demand, saturation: e.saturation },
-      mission: this.missions,
-    }));
+    try {
+      const e = this.economy;
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        v: 2,
+        player: this.player,
+        econ: { drift: e.drift, demand: e.demand, saturation: e.saturation },
+        mission: this.missions,
+      }));
+      this.saveFailed = false;
+    } catch (err) {
+      // localStorage can fail in private mode or when full — warn once
+      if (!this.saveFailed) { this.saveFailed = true; this.toast('⚠️ Could not save progress — browser storage is blocked or full.'); }
+      console.warn('Save failed', err);
+    }
   }
   load() {
     try {
