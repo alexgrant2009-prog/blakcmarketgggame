@@ -14,7 +14,7 @@ Game.prototype.updateHUD = function () {
   $('hud-day').textContent = `${phase > 0.55 ? '🌙' : '☀️'} Day ${p.day}`;
   $('hud-carry').textContent = `🎒 ${this.carried()}/${this.carryCap()}`;
   $('hud-vehicle').textContent = this.vehicle().icon + ' ' + this.vehicle().name;
-  $('hud-smoke').textContent = `💨 ×${p.smokeBombs}`;
+  $('hud-smoke').textContent = `💨 ×${this.smokeCount()}`;
   $('hud-district').textContent = DISTRICT_INFO[this.districtOfPlayer()].name;
 
   const ev = document.getElementById('event-banner');
@@ -95,8 +95,8 @@ Game.prototype.panelDealer = function () {
       <td>${fmt$(g.cost)}</td>
       <td>${locked ? `🔒 ${g.repReq} rep` : `<button onclick="game.buyGear('${g.id}')">Buy</button>`}</td></tr>`;
   }
-  gear += `<tr><td>💨 Smoke Bomb <div class="small">Consumable. Press Q during a chase to escape.</div></td>
-    <td>${fmt$(SMOKE_BOMB_COST)}</td><td><button onclick="game.buySmoke()">Buy (have ${this.player.smokeBombs})</button></td></tr></table>`;
+  gear += `<tr><td>💨 Smoke Bomb <div class="small">Consumable. Press Q during a chase. Stays in this area — can't be carried between islands.</div></td>
+    <td>${fmt$(this.smokeCost())}</td><td><button onclick="game.buySmoke()">Buy (have ${this.smokeCount()} here)</button></td></tr></table>`;
   return `<h2>${poi.icon} ${poi.name} <span class="small">(${DISTRICT_INFO[district].name})</span></h2>
     <div class="small">Cash: ${fmt$(this.player.cash)} • Carrying ${this.carried()}/${this.carryCap()} • ⚠️ Trading near cops raises heat fast.</div>
     <table><tr><th>Item</th><th>Buy</th><th>Risk</th><th>Demand</th><th></th></tr>${rows}</table>${gear}`;

@@ -39,7 +39,9 @@ const GEAR = {
   jammer:    { id: 'jammer',    name: 'GPS Jammer',      icon: '📡', cost: 3500, repReq: 400, desc: 'Checkpoint scanners cannot detect your goods.' },
 };
 const GEAR_LIST = Object.values(GEAR);
-const SMOKE_BOMB_COST = 250; // consumable, press Q during a chase
+// Smoke bombs are a per-area consumable (press Q during a chase). They cost
+// more on the wealthier islands and CANNOT be carried between islands.
+const SMOKE_BOMB_COST = { city: 1000, island: 10000, keys: 35000 };
 
 const WORKERS = {
   courier:    { id: 'courier',    name: 'Courier',    icon: '🛵', cost: 800,  salary: 120, repReq: 50,   desc: 'Automatically sells items from your stash every 45s (safe, average price).' },

@@ -21,7 +21,7 @@ class Game {
       x: spawn.x, y: spawn.y,
       cash: 500, rep: 0, heat: 0,
       inv: {}, stash: {},
-      gear: {}, smokeBombs: 1,
+      gear: {}, smoke: { city: 1, island: 0, keys: 0 },
       vehicle: 'foot', ownedVehicles: ['foot'],
       workers: [], upgrades: {},
       day: 1, dayT: 0, jail: 0, disguiseUsedDay: 0,
@@ -99,6 +99,10 @@ class Game {
     v *= 1 + this.vehicle().susp;
     return Math.max(2.6, v);
   }
+  // Smoke bombs are stocked per-area and can't be moved between islands.
+  smokeCount() { return (this.player.smoke && this.player.smoke[this.area]) || 0; }
+  addSmoke(n) { this.player.smoke[this.area] = this.smokeCount() + n; }
+  smokeCost() { return SMOKE_BOMB_COST[this.area] || 1000; }
   itemRepReq(it) { return it.repReq != null ? it.repReq : (ITEM_TIER_REP[it.tier] || 0); }
   itemUnlocked(it) { return this.player.rep >= this.itemRepReq(it); }
   // Safe zone: within ~3.5 tiles of the hideout the police can't touch you
@@ -145,9 +149,9 @@ class Game {
   }
 
   useSmoke() {
-    if (this.player.smokeBombs <= 0) { this.toast('No smoke bombs! Buy them from any dealer.'); return; }
+    if (this.smokeCount() <= 0) { this.toast('No smoke bombs here! Buy them from a dealer in this area.'); return; }
     if (!this.police.cops.some(c => c.chasing)) { this.toast('No one is chasing you.'); return; }
-    this.player.smokeBombs--;
+    this.addSmoke(-1);
     this.police.smokeBomb();
     this.addHeat(-10);
     this.toast('💨 Smoke bomb! The cops lost you.');
@@ -464,8 +468,9 @@ class Game {
     this.renderPanel();
   }
   buySmoke() {
-    if (this.player.cash < SMOKE_BOMB_COST) { this.toast('Not enough cash.'); return; }
-    this.player.cash -= SMOKE_BOMB_COST; this.player.smokeBombs++;
+    const cost = this.smokeCost();
+    if (this.player.cash < cost) { this.toast('Not enough cash.'); return; }
+    this.player.cash -= cost; this.addSmoke(1);
     this.renderPanel();
   }
   useDisguiseStation() {
@@ -650,6 +655,15 @@ class Game {
       Object.assign(this.economy.demand, s.econ.demand);
       Object.assign(this.economy.saturation, s.econ.saturation);
       if (s.mission) this.missions = s.mission;
+      // migrate older saves: single smokeBombs count -> per-area buckets
+      if (s.player.smoke === undefined) {
+        this.player.smoke = { city: (typeof s.player.smokeBombs === 'number' ? s.player.smokeBombs : 1), island: 0, keys: 0 };
+      }
+      for (const a of ['city', 'island', 'keys']) {
+        if (this.player.smoke[a] == null) this.player.smoke[a] = 0;
+        if (this.player.areaPos[a] === undefined) this.player.areaPos[a] = null;
+      }
+      delete this.player.smokeBombs;
       if (this.player.upgrades.tunnel) this.addHideoutTunnel();
     } catch (err) { console.warn('Bad save, starting fresh', err); }
   }
