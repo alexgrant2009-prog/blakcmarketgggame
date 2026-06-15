@@ -2,13 +2,13 @@
 // Main game: player, input, interactions, missions, UI and rendering.
 
 const SAVE_KEY = 'bms_save_v1';
-const ITEM_TIER_REP = [0, 50, 150, 400, 550, 800]; // rep needed to trade each item tier
-const ISLAND_REP = 550;                  // rep needed to reach Smuggler's Isle
+const ITEM_TIER_REP = [0, 50, 150, 400, 550, 800]; // fallback rep per tier (items may override with repReq)
+const AREA_REP = { city: 0, island: 550, keys: 1000 }; // rep needed to enter each area
 const DAY_LENGTH = 240;                  // seconds per in-game day
 
 class Game {
   constructor() {
-    this.maps = { city: buildMap(), island: buildIsland() };
+    this.maps = { city: buildMap(), island: buildIsland(), keys: buildDeepIsle() };
     this.area = 'city';
     this.map = this.maps.city;
     setActiveMap(this.map);
@@ -25,7 +25,7 @@ class Game {
       vehicle: 'foot', ownedVehicles: ['foot'],
       workers: [], upgrades: {},
       day: 1, dayT: 0, jail: 0, disguiseUsedDay: 0,
-      area: 'city', areaPos: { city: null, island: null },
+      area: 'city', areaPos: { city: null, island: null, keys: null },
       stats: { earned: 0, busts: 0, missions: 0 },
     };
     this.missions = { offers: [], active: null };
@@ -99,7 +99,8 @@ class Game {
     v *= 1 + this.vehicle().susp;
     return Math.max(2.6, v);
   }
-  itemUnlocked(it) { return this.player.rep >= ITEM_TIER_REP[it.tier]; }
+  itemRepReq(it) { return it.repReq != null ? it.repReq : (ITEM_TIER_REP[it.tier] || 0); }
+  itemUnlocked(it) { return this.player.rep >= this.itemRepReq(it); }
   // Safe zone: within ~3.5 tiles of the hideout the police can't touch you
   inHideoutZone() {
     const h = this.map.pois.find(p => p.kind === 'hideout');
@@ -193,21 +194,27 @@ class Game {
   }
   travelTo(area) {
     if (!this.maps[area] || area === this.area) return;
-    if (area === 'island' && this.player.rep < ISLAND_REP) {
-      this.toast(`🔒 The ferry crew won't take you yet. Reach ${ISLAND_REP} rep.`); return;
+    const need = AREA_REP[area] || 0;
+    if (this.player.rep < need) {
+      this.toast(`🔒 You're not connected enough to go there yet. Reach ${need} rep.`); return;
     }
-    this.player.areaPos[this.area] = { x: this.player.x, y: this.player.y };
+    const from = this.area;
+    this.player.areaPos[from] = { x: this.player.x, y: this.player.y };
     this.area = area; this.player.area = area;
     this.applyArea();
-    // arrive at the destination's ferry dock
-    const dock = this.map.pois.find(p => p.kind === 'ferry');
+    // arrive at the portal that leads back the way we came (falls back to any)
+    const dock = this.map.pois.find(p => p.kind === 'ferry' && p.to === from)
+      || this.map.pois.find(p => p.kind === 'ferry');
     const s = this.findWalkableNear(dock.tx, dock.ty + 1);
     this.player.x = s.x; this.player.y = s.y;
-    this.player.heat = Math.floor(this.player.heat * 0.5); // crossing the water shakes some heat
+    this.player.heat = Math.floor(this.player.heat * 0.5); // crossing shakes some heat; fresh cops
     this.closePanel();
-    this.toast(area === 'island'
-      ? "⛴️ Welcome to Smuggler's Isle — premium goods, premium prices. The local cops don't know you... yet."
-      : '⛴️ Back on the mainland.');
+    const arriveMsg = {
+      island: "⛴️ Welcome to Smuggler's Isle — premium goods, premium prices. The local cops don't know you... yet.",
+      keys: '🕳️ You surface on The Cartel Keys. Deepest, deadliest, richest market of all.',
+      city: '⛴️ Back on the mainland.',
+    };
+    this.toast(arriveMsg[area] || 'You arrive somewhere new.');
   }
 
   // ---------- trading ----------

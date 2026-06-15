@@ -37,13 +37,17 @@ Your progress autosaves to the browser every 10 seconds.
 
 Six districts — the Slums, Downtown, the Black Market, Warehouse Row, the Rich District and the Docks — connected by roads, back alleys and a sewer fast-travel network the police can't follow you into. Six police precincts are spread across the map.
 
-## ⛴️ Smuggler's Isle
+## ⛴️ Smuggler's Isle & 🕳️ The Cartel Keys
 
-At **550 reputation**, the ferry at The Docks opens up a second island map. It trades in premium goods — **Stolen Artifacts** and **Smuggled Gold** — that cost a fortune to buy but sell for huge money in the Resort Strip. The island has its own police force, its own hidden escape coves, and an island safe house. Crossing the water also shakes off the mainland cops. Ride the ferry back whenever you like.
+At **550 reputation**, the ferry at The Docks opens a second island. It trades in premium goods and narcotics that cost a fortune but sell for huge money in the Resort Strip, each unlocked by reputation: **Weed** (550), **Cocaine** (650), **Methamphetamine** (750), **Fentanyl** (900), plus **Stolen Artifacts** and **Smuggled Gold**.
+
+At **1000 reputation**, an underground pathway on the Isle leads to a third island, **The Cartel Keys** — the richest and deadliest market of all, with its own Cartel dealers and buyers paying the highest prices in the game.
+
+Every island has its own police force, its own hidden escape routes, and its own safe house. Crossing between them shakes off the cops you left behind.
 
 ## 📦 Contraband
 
-Counterfeit Goods, Fake IDs, Rare Medicine, Luxury Watches, Stolen Tech and Encrypted Drives — plus the island-only Stolen Artifacts and Smuggled Gold. Each has its own buy price, sell price, risk level and live demand.
+Counterfeit Goods, Fake IDs, Rare Medicine, Luxury Watches, Stolen Tech, Encrypted Drives — plus the island goods: Stolen Artifacts, Smuggled Gold, Weed, Cocaine, Methamphetamine and Fentanyl. Each has its own buy price, sell price, risk level and live demand.
 
 ## 📈 Dynamic economy
 

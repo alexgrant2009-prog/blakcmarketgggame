@@ -72,7 +72,7 @@ Game.prototype.panelDealer = function () {
   for (const it of ITEM_LIST) {
     if (it.tier > poi.tier) continue;
     if (!this.itemUnlocked(it)) {
-      rows += `<tr class="locked"><td>${it.icon} ${it.name}</td><td colspan="4">🔒 Unlocks at ${ITEM_TIER_REP[it.tier]} rep</td></tr>`;
+      rows += `<tr class="locked"><td>${it.icon} ${it.name}</td><td colspan="4">🔒 Unlocks at ${this.itemRepReq(it)} rep</td></tr>`;
       continue;
     }
     const price = this.economy.buyPrice(it.id, district);
@@ -231,7 +231,7 @@ Game.prototype.panelPrices = function () {
   let rows = '';
   for (const it of ITEM_LIST) {
     if (!this.itemUnlocked(it)) {
-      rows += `<tr class="locked"><td>${it.icon} ${it.name}</td><td colspan="${districts.length + 1}">🔒 ${ITEM_TIER_REP[it.tier]} rep</td></tr>`;
+      rows += `<tr class="locked"><td>${it.icon} ${it.name}</td><td colspan="${districts.length + 1}">🔒 ${this.itemRepReq(it)} rep</td></tr>`;
       continue;
     }
     let best = 0;
@@ -280,8 +280,10 @@ Game.prototype.panelHelp = function () {
   🏠 Your hideout is a SAFE ZONE (the gold circle): police cannot chase, grab or kill you inside it. Reach it during a chase and they back off.
   👁️ Cops chase what they SEE: if an officer has line of sight on you while you carry contraband — or while you have any star — he chases. Buildings block their view, so duck behind corners; stay out of sight for a few seconds and he gives up. At ★★★★ the whole force converges on you regardless.
   ☠️ NEVER TOUCH A COP. Bump one while carrying contraband (or at ★★+) and you DIE on the spot: everything you carry is lost, 50–65% of your cash, and reputation (5 below 100 rep, 15 below 200, 35 below 300, 50 above). You respawn at your hideout — only the stash survives. Bump one while clean and you get shoved off with a warning — and your heat rises. Heat fades with time, or hire a hacker.</div>
-  <h3>⛴️ Smuggler's Isle</h3>
-  <div class="small">At <b>550 rep</b> the ferry (⛴️ at The Docks) opens up. The island deals in premium goods — Stolen Artifacts and Smuggled Gold — that cost a fortune but sell for huge money in the Resort Strip. It has its own police, its own escape coves and an island safe house. Crossing the water also leaves the mainland cops behind. Ride the ferry back anytime.</div>
+  <h3>⛴️ Smuggler's Isle & 🕳️ The Cartel Keys</h3>
+  <div class="small">At <b>550 rep</b> the ferry (⛴️ at The Docks) opens up. Smuggler's Isle deals in premium goods and narcotics that cost a fortune but sell for huge money — each unlocks with reputation:
+  🌿 Weed (550) • ❄️ Cocaine (650) • 💎 Meth (750) • ☠️ Fentanyl (900), plus 🏺 Artifacts and 🪙 Gold.
+  At <b>1000 rep</b> an underground pathway (🕳️) on the Isle leads to a third island, <b>The Cartel Keys</b> — the richest, deadliest market of all. Every island has its own police, escape routes and safe house; crossing leaves the old cops behind.</div>
   <h3>Reputation</h3>
   <div class="small">${REP_TIERS.map(t => `<b>${t.rep}</b> ${t.title} — ${t.perk}`).join('<br>')}</div>
   <button onclick="game.closePanel()">Hit the streets →</button>`;

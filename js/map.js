@@ -42,6 +42,11 @@ function islandDistrictAt(tx, ty) {
   if (ty < 36) return 'island_resort';
   return 'island_smuggler';
 }
+function keysDistrictAt(tx, ty) {
+  if (tx < 38) return 'keys_port';
+  if (ty < 36) return 'keys_villa';
+  return 'keys_lab';
+}
 
 const CITY_TINTS = {
   slums: ['#3a322c', '#43382e', '#383028'], downtown: ['#33363f', '#3a3d48', '#2f323a'],
@@ -52,6 +57,11 @@ const ISLAND_TINTS = {
   island_port: ['#3a4038', '#41483c', '#36403a'],
   island_resort: ['#46413a', '#4e4940', '#433f36'],
   island_smuggler: ['#34403e', '#3b4a46', '#2f413c'],
+};
+const KEYS_TINTS = {
+  keys_port:  ['#3c3340', '#443a48', '#382f3c'],
+  keys_villa: ['#4a3a44', '#52404c', '#45353f'],
+  keys_lab:   ['#333d44', '#3a454c', '#2e373e'],
 };
 
 // Carve a plaza around a spot and dig a corridor to the nearest road/dock.
@@ -214,9 +224,10 @@ function buildIsland() {
 
   map.pois = [
     { id: 'ferry_island', kind: 'ferry',  name: 'Ferry back to the City', icon: '⛴️', tx: 14, ty: 34, repReq: 0, to: 'city' },
-    { id: 'dealer_isle',  kind: 'dealer', name: "Smuggler's Isle Bazaar", icon: '🏝️', tx: 26, ty: 20, tier: 5, repReq: 550, gearShop: true },
+    { id: 'dealer_isle',  kind: 'dealer', name: "Smuggler's Isle Bazaar", icon: '🏝️', tx: 26, ty: 20, tier: 9, repReq: 550, gearShop: true },
     { id: 'buyer_resort', kind: 'buyer',  name: 'Resort High-Roller',     icon: '🍸', tx: 64, ty: 18, repReq: 550 },
     { id: 'buyer_wharf',  kind: 'buyer',  name: "Smuggler's Wharf",       icon: '🛥️', tx: 40, ty: 50, repReq: 550 },
+    { id: 'tunnel_keys',  kind: 'ferry',  name: 'Underground Pathway to The Keys', icon: '🕳️', tx: 50, ty: 56, repReq: 1000, to: 'keys' },
     { id: 'safehouse',    kind: 'hideout', name: 'Island Safe House',     icon: '🏖️', tx: 54, ty: 28 },
     { id: 'isle_police1', kind: 'police',  name: 'Isle Patrol HQ',        icon: '🏛️', tx: 48, ty: 40 },
     { id: 'isle_police2', kind: 'police',  name: 'Cove Watch',            icon: '🏛️', tx: 70, ty: 14 },
@@ -234,4 +245,51 @@ function buildIsland() {
   ];
   map.water = '#0e3a40'; // warmer tropical water
   return finalizeMap(map, rnd, islandDistrictAt, ISLAND_TINTS);
+}
+
+// =================== THE CARTEL KEYS (third island) ===================
+function buildDeepIsle() {
+  const map = newGrid();
+  const { at, set } = map;
+
+  for (let i = 0; i < map.tiles.length; i++) map.tiles[i] = T_WATER;
+  const LX0 = 14, LX1 = 86, LY0 = 8, LY1 = 64;
+  for (let y = LY0; y < LY1; y++) for (let x = LX0; x < LX1; x++) set(x, y, T_BLOCK);
+
+  // roads
+  for (let x = LX0; x < LX1; x++) for (const ry of [12, 22, 32, 42, 52, 60]) { set(x, ry, T_ROAD); set(x, ry + 1, T_ROAD); }
+  for (let y = LY0; y < LY1; y++) for (const rx of [16, 28, 40, 52, 64, 76]) { set(rx, y, T_ROAD); set(rx + 1, y, T_ROAD); }
+
+  let seed = 24680;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  for (let by = 0; by < 6; by++) for (let bx = 0; bx < 6; bx++) {
+    const x0 = [16, 28, 40, 52, 64, 76][bx] + 2, y0 = [12, 22, 32, 42, 52, 60][by] + 2;
+    const x1 = ([28, 40, 52, 64, 76, 86][bx]) - 1, y1 = ([22, 32, 42, 52, 60, 64][by]) - 1;
+    if (rnd() < 0.7) { const ay = y0 + 1 + Math.floor(rnd() * Math.max(1, y1 - y0 - 2)); for (let x = x0 - 2; x <= x1 + 1; x++) if (at(x, ay) === T_BLOCK) set(x, ay, T_ALLEY); }
+    if (rnd() < 0.6) { const ax = x0 + 1 + Math.floor(rnd() * Math.max(1, x1 - x0 - 2)); for (let y = y0 - 2; y <= y1 + 1; y++) if (at(ax, y) === T_BLOCK) set(ax, y, T_ALLEY); }
+  }
+  for (let y = 44; y < 50; y++) for (let x = 20; x < 30; x++) set(x, y, T_PARK);
+
+  map.pois = [
+    { id: 'tunnel_island', kind: 'ferry',  name: 'Pathway back to the Isle', icon: '🕳️', tx: 18, ty: 36, repReq: 0, to: 'island' },
+    { id: 'dealer_keys',   kind: 'dealer', name: 'Cartel Warehouse',       icon: '🏴', tx: 30, ty: 18, tier: 9, repReq: 1000, gearShop: true },
+    { id: 'buyer_villa',   kind: 'buyer',  name: 'Cartel Boss',            icon: '🤵', tx: 62, ty: 16, repReq: 1000 },
+    { id: 'buyer_lab',     kind: 'buyer',  name: 'Lab Buyer',              icon: '🧪', tx: 44, ty: 52, repReq: 1000 },
+    { id: 'keys_safe',     kind: 'hideout', name: 'Cartel Safe House',     icon: '🏚️', tx: 56, ty: 26 },
+    { id: 'keys_police1',  kind: 'police',  name: 'Federales HQ',          icon: '🏛️', tx: 46, ty: 36 },
+    { id: 'keys_police2',  kind: 'police',  name: 'Coast Guard Post',      icon: '🏛️', tx: 72, ty: 50 },
+    { id: 'keys_heist',    kind: 'heist',   name: 'Cartel Vault',          icon: '📦', tx: 78, ty: 20, repReq: 1000 },
+  ];
+  map.sewers = [
+    { id: 'k_tunnel_n', name: 'Smuggler Tunnel (N)', tx: 34, ty: 12 },
+    { id: 'k_tunnel_s', name: 'Smuggler Tunnel (S)', tx: 60, ty: 58 },
+    { id: 'k_bunker',   name: 'Hidden Bunker',       tx: 22, ty: 56 },
+    { id: 'k_jetty',    name: 'Speedboat Jetty',     tx: 80, ty: 36 },
+  ];
+  map.districtIds = ['keys_port', 'keys_villa', 'keys_lab'];
+  map.labels = [
+    ['KEYS LANDING', 16, 7], ['CARTEL VILLAS', 52, 7], ['THE LABS', 42, 63],
+  ];
+  map.water = '#241a30'; // dark night water
+  return finalizeMap(map, rnd, keysDistrictAt, KEYS_TINTS);
 }

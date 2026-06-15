@@ -10,8 +10,13 @@ const ITEMS = {
   tech:        { id: 'tech',        name: 'Stolen Tech',       icon: '💻', base: 560, risk: 3, tier: 2 },
   drives:      { id: 'drives',      name: 'Encrypted Drives',  icon: '💾', base: 950, risk: 4, tier: 3 },
   // premium goods — only traded on Smuggler's Isle
-  artifact:    { id: 'artifact',    name: 'Stolen Artifacts',  icon: '🏺', base: 1600, risk: 4, tier: 4 },
-  gold:        { id: 'gold',        name: 'Smuggled Gold',     icon: '🪙', base: 2600, risk: 5, tier: 5 },
+  artifact:    { id: 'artifact',    name: 'Stolen Artifacts',  icon: '🏺', base: 1600, risk: 4, tier: 4, repReq: 550 },
+  gold:        { id: 'gold',        name: 'Smuggled Gold',     icon: '🪙', base: 2600, risk: 5, tier: 5, repReq: 800 },
+  // narcotics — high risk, high reward, unlocked by reputation
+  weed:        { id: 'weed',        name: 'Weed',              icon: '🌿', base: 700,  risk: 3, tier: 5, repReq: 550 },
+  cocaine:     { id: 'cocaine',     name: 'Cocaine',           icon: '❄️', base: 1500, risk: 4, tier: 6, repReq: 650 },
+  meth:        { id: 'meth',        name: 'Methamphetamine',   icon: '💎', base: 2200, risk: 5, tier: 6, repReq: 750 },
+  fentanyl:    { id: 'fentanyl',    name: 'Fentanyl',          icon: '☠️', base: 3400, risk: 6, tier: 7, repReq: 900 },
 };
 const ITEM_LIST = Object.values(ITEMS);
 
@@ -63,8 +68,11 @@ const REP_TIERS = [
   { rep: 50,   title: 'Runner',      perk: 'Docks dealer, scanner, license, courier' },
   { rep: 150,  title: 'Hustler',     perk: 'Warehouse dealer, motorcycle, van, lockpick' },
   { rep: 400,  title: 'Smuggler',    perk: 'Black-market broker, rich buyers, armored truck, boat' },
-  { rep: 550,  title: 'Kingfish',    perk: "⛴️ Ferry to Smuggler's Isle — premium goods & huge payouts" },
-  { rep: 1000, title: 'Operator',    perk: 'Elite penthouse buyer, encrypted drives demand' },
+  { rep: 550,  title: 'Kingfish',    perk: "⛴️ Ferry to Smuggler's Isle — premium goods, weed" },
+  { rep: 650,  title: 'Distributor', perk: '❄️ Cocaine trade opens up' },
+  { rep: 750,  title: 'Cook',        perk: '💎 Methamphetamine trade opens up' },
+  { rep: 900,  title: 'Cartel',      perk: '☠️ Fentanyl — the deadliest, most lucrative trade' },
+  { rep: 1000, title: 'Operator',    perk: '🕳️ Underground pathway to The Cartel Keys (third island)' },
   { rep: 2500, title: 'Kingpin',     perk: 'You control the underground economy' },
 ];
 
@@ -93,6 +101,10 @@ const DISTRICT_INFO = {
   island_port:     { name: 'Isle Port',        sellMult: 1.45, buyMult: 1.15 },
   island_resort:   { name: 'Resort Strip',     sellMult: 1.9,  buyMult: 1.35 },
   island_smuggler: { name: "Smuggler's Wharf",  sellMult: 1.65, buyMult: 1.05 },
+  // The Cartel Keys — the third island, reached by underground pathway at 1000 rep
+  keys_port:  { name: 'Keys Landing',  sellMult: 2.1, buyMult: 1.25 },
+  keys_villa: { name: 'Cartel Villas', sellMult: 2.7, buyMult: 1.5 },
+  keys_lab:   { name: 'The Labs',      sellMult: 2.35, buyMult: 1.1 },
 };
 
 const FIRST_NAMES = ['Vic','Lena','Marco','Dom','Sasha','Rico','Ana','Kez','Otto','Mira','Jax','Nadia'];
